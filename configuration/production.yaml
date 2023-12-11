@@ -2,3 +2,7 @@ application:
     host: 0.0.0.0
 database:
     require_ssl: true
+email_client:
+    base_url: "https://api.postmarkapp.com"
+    # Some non-public domain email I happen to own.
+    sender_email: "rerack-noreply@finnlidbetter.com"
