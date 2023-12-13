@@ -5,7 +5,7 @@ use crate::domain::SubscriberEmail;
 
 pub struct EmailClient {
     http_client: Client,
-    email_url: reqwest::Url,
+    base_url: reqwest::Url,
     sender: SubscriberEmail,
     authorization_token: Secret<String>,
 }
@@ -16,16 +16,13 @@ impl EmailClient {
         authorization_token: Secret<String>,
         timeout: std::time::Duration,
     ) -> Result<Self, String> {
-        let email_url = base_url
-            .join("/email")
-            .map_err(|e| format!("Could not construct email url: {}.", e))?;
         let http_client = Client::builder()
             .timeout(timeout)
             .build()
             .map_err(|e| format!("Failed to build http client: {}", e))?;
         Ok(Self {
             http_client,
-            email_url,
+            base_url,
             sender,
             authorization_token,
         })
@@ -45,15 +42,18 @@ impl EmailClient {
             html_body: html_content,
             text_body: text_content,
         };
+        let email_url = self.base_url.join("/email").unwrap();
         let builder = self
             .http_client
-            .post(self.email_url.clone())
+            .post(email_url)
             .header(
                 "X-Postmark-Server-Token",
                 self.authorization_token.expose_secret(),
             )
             .json(&request_body);
-        builder.send().await?.error_for_status()?;
+        let response_result = builder.send().await;
+        let response = response_result?;
+        response.error_for_status()?;
         Ok(())
     }
 }
