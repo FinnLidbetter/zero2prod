@@ -1,3 +1,4 @@
+use anyhow::Context;
 use reqwest::Client;
 use secrecy::{ExposeSecret, Secret};
 
@@ -15,11 +16,11 @@ impl EmailClient {
         sender: SubscriberEmail,
         authorization_token: Secret<String>,
         timeout: std::time::Duration,
-    ) -> Result<Self, String> {
+    ) -> Result<Self, anyhow::Error> {
         let http_client = Client::builder()
             .timeout(timeout)
             .build()
-            .map_err(|e| format!("Failed to build http client: {}", e))?;
+            .context("Failed to build http client")?;
         Ok(Self {
             http_client,
             base_url,
